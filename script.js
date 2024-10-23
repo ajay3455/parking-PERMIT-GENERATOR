@@ -33,8 +33,8 @@ document.getElementById('passForm').addEventListener('submit', function(e) {
     qrCodeDiv.innerHTML = '';
     new QRCode(qrCodeDiv, {
         text: qrData,
-        width: 180,
-        height: 180
+        width: 200,
+        height: 200
     });
 
     document.getElementById('passOutput').style.display = 'block';
@@ -73,7 +73,7 @@ document.getElementById('scanButton').addEventListener('click', function() {
             const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
 
             const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                inversionAttempts: 'dontInvert',
+                inversionAttempts: 'attemptBoth',
             });
 
             if (code) {
@@ -101,7 +101,9 @@ document.getElementById('uploadInput').addEventListener('change', function(e) {
         canvasElement.height = img.height;
         canvas.drawImage(img, 0, 0, img.width, img.height);
         const imageData = canvas.getImageData(0, 0, img.width, img.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'attemptBoth',
+        });
         if (code) {
             processQRCode(code.data);
         } else {
@@ -119,9 +121,9 @@ function processQRCode(data) {
         let status = '';
 
         if (now > expiryDate) {
-            status = '<div class="alert alert-danger">Status: Expired</div>';
+            status = '<div class="alert alert-danger"><strong>Status:</strong> Expired</div>';
         } else {
-            status = '<div class="alert alert-success">Status: Valid</div>';
+            status = '<div class="alert alert-success"><strong>Status:</strong> Valid</div>';
         }
 
         const resultHTML = `
