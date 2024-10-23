@@ -1,333 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Gloucester Security Hub - Parking Pass System</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap 5 CSS for Responsive and Modern UI -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Google Fonts for Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <!-- QRCode.js for Generating QR Codes -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- html5-qrcode for Scanning QR Codes via Camera -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <!-- jsQR for Scanning QR Codes from Images -->
-    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
-    <!-- Custom Styles -->
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #343a40;
-            margin-bottom: 40px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .section {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin-bottom: 40px;
-        }
-        /* QR Code Styles */
-        #qrcode {
-            text-align: center;
-            margin-top: 20px;
-        }
-        /* Verification Area */
-        .verification-area {
-            text-align: center;
-        }
-        /* Responsive QR Code */
-        @media (max-width: 768px) {
-            #qrcode canvas {
-                width: 100% !important;
-                height: auto !important;
-            }
-        }
-        /* Button Styles */
-        .btn-custom {
-            background-color: #4e73df;
-            color: #fff;
-        }
-        .btn-custom:hover {
-            background-color: #2e59d9;
-            color: #fff;
-        }
-        /* Loader Styles */
-        .loader {
-            border: 8px solid #f3f3f3; /* Light Grey */
-            border-top: 8px solid #4e73df; /* Blue */
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-            display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
+document.getElementById('passForm').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-    <h1>Gloucester Security Hub - Parking Pass System</h1>
+    const securityCardName = document.getElementById('securityCardName').value;
+    const licensePlate = document.getElementById('licensePlate').value;
+    const visitorName = document.getElementById('visitorName').value;
+    const vehicleModel = document.getElementById('vehicleModel').value;
+    const duration = parseInt(document.getElementById('duration').value);
 
-    <div class="container">
+    const expiryDate = new Date(Date.now() + duration * 60000); // duration in minutes
 
-        <!-- Generate Parking Pass Section -->
-        <div class="section" id="generateSection">
-            <h2>Generate Parking Pass</h2>
-            <form id="parkingForm">
-                <div class="mb-3">
-                    <label for="securityCardName" class="form-label">Security Card Name</label>
-                    <input type="text" class="form-control" id="securityCardName" placeholder="Enter Security Card Name" required>
-                </div>
-                <div class="mb-3">
-                    <label for="licensePlate" class="form-label">License Plate Number</label>
-                    <input type="text" class="form-control" id="licensePlate" placeholder="Enter License Plate Number" required>
-                </div>
-                <div class="mb-3">
-                    <label for="visitorName" class="form-label">Visitor's Name</label>
-                    <input type="text" class="form-control" id="visitorName" placeholder="Enter Visitor's Name" required>
-                </div>
-                <div class="mb-3">
-                    <label for="vehicleModel" class="form-label">Vehicle Model</label>
-                    <input type="text" class="form-control" id="vehicleModel" placeholder="Enter Vehicle Model" required>
-                </div>
-                <div class="mb-3">
-                    <label for="duration" class="form-label">Duration</label>
-                    <select class="form-select" id="duration" required>
-                        <option value="">Select Duration</option>
-                        <option value="1">1 Minute</option>
-                        <option value="5">5 Minutes</option>
-                        <option value="15">15 Minutes</option>
-                        <option value="60">1 Hour</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-custom">Generate Parking Pass</button>
-            </form>
-            <div id="qrcode"></div>
-        </div>
+    const passData = {
+        securityCardName,
+        licensePlate,
+        visitorName,
+        vehicleModel,
+        expiryDate: expiryDate.toISOString()
+    };
 
-        <!-- Verify Parking Pass Section -->
-        <div class="section" id="verifySection">
-            <h2>Verify Parking Pass</h2>
-            <div class="verification-area">
-                <button class="btn btn-success mb-3" id="scanButton">Scan QR Code via Camera</button>
-                <br>
-                <input type="file" accept="image/*" id="uploadImage" class="form-control mb-3">
-                <div id="qr-result" class="mt-4"></div>
-                <div id="qr-reader" style="width:500px; margin: 0 auto;"></div>
-                <div class="loader" id="loader"></div>
-            </div>
-        </div>
+    // Generate QR code data
+    const qrData = JSON.stringify(passData);
 
-    </div>
+    // Display the pass
+    document.getElementById('expiryDateTime').textContent = expiryDate.toLocaleString();
+    document.getElementById('vehicleNumber').textContent = licensePlate;
 
-    <!-- Bootstrap 5 JS and dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- QRCode.js is already included in the head -->
-    <!-- html5-qrcode is already included in the head -->
-    <!-- jsQR is already included in the head -->
-    <!-- Custom Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elements
-            const parkingForm = document.getElementById('parkingForm');
-            const qrcodeContainer = document.getElementById('qrcode');
-            const scanButton = document.getElementById('scanButton');
-            const uploadImage = document.getElementById('uploadImage');
-            const qrResult = document.getElementById('qr-result');
-            const qrReader = document.getElementById('qr-reader');
-            const loader = document.getElementById('loader');
-            const deleteBtn = document.getElementById('deleteBtn');
+    // Generate QR code
+    const qrCodeDiv = document.getElementById('qrcode');
+    qrCodeDiv.innerHTML = '';
+    new QRCode(qrCodeDiv, {
+        text: qrData,
+        width: 200,
+        height: 200
+    });
 
-            // Initialize html5-qrcode scanner
-            let html5QrcodeScanner;
+    document.getElementById('passOutput').style.display = 'block';
+});
 
-            // Function to generate QR Code
-            function generateQRCode(data) {
-                // Clear previous QR Code
-                qrcodeContainer.innerHTML = "";
-                // Generate new QR Code
-                new QRCode(qrcodeContainer, {
-                    text: JSON.stringify(data),
-                    width: 200,
-                    height: 200,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            }
+document.getElementById('printButton').addEventListener('click', function() {
+    window.print();
+});
 
-            // Handle Form Submission for Generating Parking Pass
-            parkingForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                // Get form values
-                const securityCardName = document.getElementById("securityCardName").value.trim();
-                const licensePlate = document.getElementById("licensePlate").value.trim();
-                const visitorName = document.getElementById("visitorName").value.trim();
-                const vehicleModel = document.getElementById("vehicleModel").value.trim();
-                const duration = parseInt(document.getElementById("duration").value);
+// Verification code
+document.getElementById('scanButton').addEventListener('click', function() {
+    // Implement QR code scanning via camera
+    const video = document.getElementById('video');
+    const canvasElement = document.getElementById('canvas');
+    const canvas = canvasElement.getContext('2d');
 
-                // Validate duration
-                if (![1,5,15,60].includes(duration)) {
-                    alert("Invalid duration selected.");
-                    return;
-                }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function(stream) {
+        video.srcObject = stream;
+        video.setAttribute('playsinline', true); // required to tell iOS safari we don't want fullscreen
+        video.style.display = 'block';
+        video.play();
+        requestAnimationFrame(tick);
+    });
 
-                // Get current time and calculate expiry time
-                const issuedTime = new Date();
-                const expiryTime = new Date(issuedTime.getTime() + duration * 60000); // duration in minutes
+    function tick() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvasElement.hidden = false;
+            canvasElement.height = video.videoHeight;
+            canvasElement.width = video.videoWidth;
+            canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+            const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
 
-                // Create data object
-                const parkingPass = {
-                    securityCardName,
-                    licensePlate,
-                    visitorName,
-                    vehicleModel,
-                    duration, // in minutes
-                    issuedTime: issuedTime.toISOString(),
-                    expiryTime: expiryTime.toISOString()
-                };
-
-                // Generate QR Code
-                generateQRCode(parkingPass);
-
-                // Optionally, you can display the pass details below the QR code
-                // For simplicity, omitted here
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'dontInvert',
             });
 
-            // Function to display scan result
-            function displayScanResult(decodedText) {
-                const qrResult = document.getElementById("qr-result");
-                try {
-                    const data = JSON.parse(decodedText);
-                    const currentTime = new Date();
-                    const expiryTime = new Date(data.expiryTime);
-                    let status = "";
-
-                    if(currentTime > expiryTime) {
-                        status = "<span class='badge bg-danger'>Expired</span>";
-                    } else {
-                        status = "<span class='badge bg-success'>Valid</span>";
-                    }
-
-                    qrResult.innerHTML = `
-                        <h4>Parking Pass Details:</h4>
-                        <p><strong>Security Card Name:</strong> ${data.securityCardName}</p>
-                        <p><strong>License Plate:</strong> ${data.licensePlate}</p>
-                        <p><strong>Visitor's Name:</strong> ${data.visitorName}</p>
-                        <p><strong>Vehicle Model:</strong> ${data.vehicleModel}</p>
-                        <p><strong>Duration:</strong> ${data.duration} Minute(s)</p>
-                        <p><strong>Issued Time:</strong> ${new Date(data.issuedTime).toLocaleString()}</p>
-                        <p><strong>Expiry Time:</strong> ${new Date(data.expiryTime).toLocaleString()}</p>
-                        <p><strong>Status:</strong> ${status}</p>
-                    `;
-                } catch (error) {
-                    qrResult.innerHTML = `<div class="alert alert-danger" role="alert">
-                        Invalid QR Code or Data.
-                    </div>`;
-                }
+            if (code) {
+                // QR code detected
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.style.display = 'none';
+                processQRCode(code.data);
+                return;
             }
+        }
+        requestAnimationFrame(tick);
+    }
+});
 
-            // Handle Scan Button Click
-            scanButton.addEventListener('click', function() {
-                // Show loader
-                loader.style.display = 'block';
-                qrResult.innerHTML = "";
-                qrReader.innerHTML = "";
+document.getElementById('uploadInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) {
+        return;
+    }
+    const img = new Image();
+    img.onload = function() {
+        const canvasElement = document.getElementById('canvas');
+        const canvas = canvasElement.getContext('2d');
+        canvasElement.width = img.width;
+        canvasElement.height = img.height;
+        canvas.drawImage(img, 0, 0, img.width, img.height);
+        const imageData = canvas.getImageData(0, 0, img.width, img.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+            processQRCode(code.data);
+        } else {
+            document.getElementById('verificationResult').textContent = 'No QR code found.';
+        }
+    };
+    img.src = URL.createObjectURL(file);
+});
 
-                // Initialize html5-qrcode
-                html5QrcodeScanner = new Html5Qrcode("qr-reader");
-
-                // Start scanning with camera facing back
-                Html5Qrcode.getCameras().then(cameras => {
-                    if (cameras && cameras.length) {
-                        // Prefer rear camera
-                        const rearCamera = cameras.find(camera => camera.label.toLowerCase().includes('back')) || cameras[0];
-                        html5QrcodeScanner.start(
-                            rearCamera.id,
-                            { fps: 10, qrbox: 250, facingMode: "environment" },
-                            onScanSuccess,
-                            onScanFailure
-                        ).catch(err => {
-                            console.error('Unable to start scanning.', err);
-                            alert('Unable to access camera for scanning.');
-                            loader.style.display = 'none';
-                        });
-                    } else {
-                        alert('No cameras found.');
-                        loader.style.display = 'none';
-                    }
-                }).catch(err => {
-                    console.error('Error getting cameras.', err);
-                    alert('Error accessing camera.');
-                    loader.style.display = 'none';
-                });
-            });
-
-            // Handle Scan Success
-            function onScanSuccess(decodedText, decodedResult) {
-                console.log(`Code matched = ${decodedText}`, decodedResult);
-                displayScanResult(decodedText);
-                // Stop scanning after successful scan
-                html5QrcodeScanner.stop().then(ignore => {
-                    // QR Code scanning is stopped.
-                    loader.style.display = 'none';
-                }).catch(err => {
-                    console.error('Unable to stop scanning.', err);
-                });
-            }
-
-            // Handle Scan Failure
-            function onScanFailure(error) {
-                // Optionally handle scan failure, but it's better to ignore and keep scanning
-                console.warn(`Code scan error = ${error}`);
-            }
-
-            // Handle Image Upload for Verification
-            uploadImage.addEventListener("change", function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = function() {
-                    const img = new Image();
-                    img.src = reader.result;
-                    img.onload = function() {
-                        // Create a canvas to draw the image
-                        const canvas = document.createElement('canvas');
-                        const context = canvas.getContext('2d');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-                        // Use jsQR to detect QR code
-                        const code = jsQR(imageData.data, imageData.width, imageData.height);
-                        if (code) {
-                            displayScanResult(code.data);
-                        } else {
-                            alert('No QR code found in the image.');
-                        }
-                    }
-                }
-                reader.readAsDataURL(file);
-            });
-        });
-    </script>
-
-</body>
-</html>
+function processQRCode(data) {
+    try {
+        const passData = JSON.parse(data);
+        const expiryDate = new Date(passData.expiryDate);
+        const now = new Date();
+        let result = `Pass Details:
+Security Card Name: ${passData.securityCardName}
+License Plate: ${passData.licensePlate}
+Visitor's Name: ${passData.visitorName}
+Vehicle Model: ${passData.vehicleModel}
+Expiry Date: ${expiryDate.toLocaleString()}
+`;
+        if (now > expiryDate) {
+            result += '\nStatus: Expired';
+        } else {
+            result += '\nStatus: Valid';
+        }
+        document.getElementById('verificationResult').textContent = result;
+    } catch (e) {
+        document.getElementById('verificationResult').textContent = 'Invalid QR code data.';
+    }
+}
