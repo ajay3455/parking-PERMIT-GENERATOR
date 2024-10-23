@@ -1,3 +1,4 @@
+// Generate Parking Pass
 document.getElementById('passForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -23,17 +24,22 @@ document.getElementById('passForm').addEventListener('submit', function(e) {
     // Display the pass
     document.getElementById('expiryDateTime').textContent = expiryDate.toLocaleString();
     document.getElementById('vehicleNumber').textContent = licensePlate;
+    document.getElementById('displaySecurityCardName').textContent = securityCardName;
+    document.getElementById('displayVisitorName').textContent = visitorName;
+    document.getElementById('displayVehicleModel').textContent = vehicleModel;
 
     // Generate QR code
     const qrCodeDiv = document.getElementById('qrcode');
     qrCodeDiv.innerHTML = '';
     new QRCode(qrCodeDiv, {
         text: qrData,
-        width: 200,
-        height: 200
+        width: 180,
+        height: 180
     });
 
     document.getElementById('passOutput').style.display = 'block';
+    // Scroll to the pass output
+    document.getElementById('passOutput').scrollIntoView({ behavior: 'smooth' });
 });
 
 document.getElementById('printButton').addEventListener('click', function() {
@@ -46,6 +52,9 @@ document.getElementById('scanButton').addEventListener('click', function() {
     const video = document.getElementById('video');
     const canvasElement = document.getElementById('canvas');
     const canvas = canvasElement.getContext('2d');
+    const verificationResult = document.getElementById('verificationResult');
+
+    verificationResult.innerHTML = '';
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function(stream) {
         video.srcObject = stream;
@@ -96,7 +105,7 @@ document.getElementById('uploadInput').addEventListener('change', function(e) {
         if (code) {
             processQRCode(code.data);
         } else {
-            document.getElementById('verificationResult').textContent = 'No QR code found.';
+            document.getElementById('verificationResult').innerHTML = '<div class="alert alert-danger">No QR code found.</div>';
         }
     };
     img.src = URL.createObjectURL(file);
@@ -107,20 +116,26 @@ function processQRCode(data) {
         const passData = JSON.parse(data);
         const expiryDate = new Date(passData.expiryDate);
         const now = new Date();
-        let result = `Pass Details:
-Security Card Name: ${passData.securityCardName}
-License Plate: ${passData.licensePlate}
-Visitor's Name: ${passData.visitorName}
-Vehicle Model: ${passData.vehicleModel}
-Expiry Date: ${expiryDate.toLocaleString()}
-`;
+        let status = '';
+
         if (now > expiryDate) {
-            result += '\nStatus: Expired';
+            status = '<div class="alert alert-danger">Status: Expired</div>';
         } else {
-            result += '\nStatus: Valid';
+            status = '<div class="alert alert-success">Status: Valid</div>';
         }
-        document.getElementById('verificationResult').textContent = result;
+
+        const resultHTML = `
+            <h4>Pass Details:</h4>
+            <p><strong>Security Card Name:</strong> ${passData.securityCardName}</p>
+            <p><strong>Visitor's Name:</strong> ${passData.visitorName}</p>
+            <p><strong>Vehicle Model:</strong> ${passData.vehicleModel}</p>
+            <p><strong>License Plate:</strong> ${passData.licensePlate}</p>
+            <p><strong>Expiry Date:</strong> ${expiryDate.toLocaleString()}</p>
+            ${status}
+        `;
+
+        document.getElementById('verificationResult').innerHTML = resultHTML;
     } catch (e) {
-        document.getElementById('verificationResult').textContent = 'Invalid QR code data.';
+        document.getElementById('verificationResult').innerHTML = '<div class="alert alert-danger">Invalid QR code data.</div>';
     }
 }
