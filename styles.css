@@ -1,0 +1,68 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-top: 10px;
+}
+
+input, select {
+    padding: 8px;
+    font-size: 16px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+#printArea {
+    width: 80mm;
+    max-width: 80mm;
+    padding: 10px;
+    border: 1px solid #000;
+}
+
+#printArea p {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#qrcode canvas {
+    width: 200px;
+    height: 200px;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printArea, #printArea * {
+        visibility: visible;
+    }
+    #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        height: 297mm;
+    }
+}
